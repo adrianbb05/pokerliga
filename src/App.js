@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS = {
 
 const tabs = [
   { id: 'standings', label: 'Clasificación General' },
+  { id: 'players', label: 'Jugadores' },
   { id: 'register', label: 'Registro de Partidas' },
   { id: 'weekly', label: 'Resumen Semanal' },
   { id: 'stats', label: 'Estadísticas' },
@@ -186,61 +187,65 @@ function App() {
   };
 
   const renderContent = () => {
+    const playersPanel = (
+      <section className="panel">
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">Plantilla</p>
+            <h2>Gestionar Jugadores</h2>
+          </div>
+        </div>
+
+        <form className="match-form" onSubmit={handleAddPlayer}>
+          <div className="field" style={{ gridColumn: 'span 2' }}>
+            <label htmlFor="new-player-name">Nombre del jugador</label>
+            <input
+              id="new-player-name"
+              type="text"
+              value={newPlayerName}
+              onChange={(event) => setNewPlayerName(event.target.value)}
+              placeholder="Ej. Ana"
+            />
+          </div>
+
+          <button type="submit" className="primary-button">
+            Añadir jugador
+          </button>
+        </form>
+
+        <div className="table-wrapper" style={{ marginTop: '20px' }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Jugador</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {players.map((player) => (
+                <tr key={player.id}>
+                  <td>{player.name}</td>
+                  <td>
+                    <button type="button" className="danger-button" onClick={() => handleDeletePlayer(player.id)}>
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    );
+
     switch (activeTab) {
       case 'standings':
         return <StandingsView players={players} matches={matches} />;
+      case 'players':
+        return playersPanel;
       case 'register':
         return (
           <>
-            <section className="panel">
-              <div className="section-header">
-                <div>
-                  <p className="eyebrow">Plantilla</p>
-                  <h2>Gestionar Jugadores</h2>
-                </div>
-              </div>
-
-              <form className="match-form" onSubmit={handleAddPlayer}>
-                <div className="field" style={{ gridColumn: 'span 2' }}>
-                  <label htmlFor="new-player-name">Nombre del jugador</label>
-                  <input
-                    id="new-player-name"
-                    type="text"
-                    value={newPlayerName}
-                    onChange={(event) => setNewPlayerName(event.target.value)}
-                    placeholder="Ej. Ana"
-                  />
-                </div>
-
-                <button type="submit" className="primary-button">
-                  Añadir jugador
-                </button>
-              </form>
-
-              <div className="table-wrapper" style={{ marginTop: '20px' }}>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Jugador</th>
-                      <th>Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {players.map((player) => (
-                      <tr key={player.id}>
-                        <td>{player.name}</td>
-                        <td>
-                          <button type="button" className="danger-button" onClick={() => handleDeletePlayer(player.id)}>
-                            Eliminar
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
             <MatchForm players={players} settings={settings} onAddMatch={handleAddMatch} />
             <MatchesView matches={matches} onDeleteMatch={handleDeleteMatch} />
           </>

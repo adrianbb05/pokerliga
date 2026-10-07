@@ -1,3 +1,23 @@
+# PokerLiga
+
+## Configuración de persistencia compartida (JSONBin)
+
+Para que los cambios se vean entre dispositivos/usuarios y no se pierdan al limpiar datos del navegador:
+
+1. Crea un archivo `.env` basado en `.env.example`.
+2. Configura los 3 bins:
+   - `REACT_APP_BIN_PLAYERS`
+   - `REACT_APP_BIN_MATCHES`
+   - `REACT_APP_BIN_SETTINGS`
+3. Configura una clave válida de JSONBin:
+   - recomendado: `REACT_APP_JSONBIN_ACCESS_KEY`
+   - opcional: `REACT_APP_JSONBIN_READ_KEY` y `REACT_APP_JSONBIN_WRITE_KEY`
+   - opcional fallback: `REACT_APP_JSONBIN_MASTER_KEY`
+
+La app usa `localStorage` solo como caché de respaldo; la fuente principal para compartir datos entre navegadores es JSONBin.
+
+---
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

@@ -43,15 +43,35 @@ const getEnvValue = (...keys) => keys.find((key) => key !== undefined && key !==
 
 const getServerConfig = () => {
   const env = typeof process !== 'undefined' && process.env ? process.env : {};
-  const viteEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
+  const readKey =
+    getEnvValue(env.REACT_APP_JSONBIN_READ_KEY, env.REACT_APP_JSONBIN_ACCESS_KEY) ?? env.REACT_APP_JSONBIN_MASTER_KEY;
+  const writeKey =
+    getEnvValue(env.REACT_APP_JSONBIN_WRITE_KEY, env.REACT_APP_JSONBIN_ACCESS_KEY) ?? env.REACT_APP_JSONBIN_MASTER_KEY;
+  const readKeyHeader =
+    getEnvValue(env.REACT_APP_JSONBIN_READ_KEY, env.REACT_APP_JSONBIN_ACCESS_KEY) ? 'X-Access-Key' : 'X-Master-Key';
+  const writeKeyHeader =
+    getEnvValue(env.REACT_APP_JSONBIN_WRITE_KEY, env.REACT_APP_JSONBIN_ACCESS_KEY) ? 'X-Access-Key' : 'X-Master-Key';
 
   return {
-    masterKey: getEnvValue(env.REACT_APP_JSONBIN_MASTER_KEY, viteEnv.VITE_JSONBIN_MASTER_KEY),
+    readKey,
+    writeKey,
+    readKeyHeader,
+    writeKeyHeader,
     binIds: {
-      matches: getEnvValue(env.REACT_APP_BIN_MATCHES, viteEnv.VITE_BIN_MATCHES),
-      players: getEnvValue(env.REACT_APP_BIN_PLAYERS, viteEnv.VITE_BIN_PLAYERS),
-      settings: getEnvValue(env.REACT_APP_BIN_SETTINGS, viteEnv.VITE_BIN_SETTINGS),
+      matches: env.REACT_APP_BIN_MATCHES,
+      players: env.REACT_APP_BIN_PLAYERS,
+      settings: env.REACT_APP_BIN_SETTINGS,
     },
+  };
+};
+
+const getAuthHeaders = (apiKey, headerName) => {
+  if (!apiKey || !headerName) {
+    return null;
+  }
+
+  return {
+    [headerName]: apiKey,
   };
 };
 
@@ -84,14 +104,15 @@ const persistLocalData = (resourceName, value) => {
 };
 
 export const fetchResource = async (resourceName) => {
-  const { masterKey, binIds } = getServerConfig();
+  const { readKey, readKeyHeader, binIds } = getServerConfig();
   const binId = binIds[resourceName];
+  const authHeaders = getAuthHeaders(readKey, readKeyHeader);
 
-  if (masterKey && binId) {
+  if (binId && authHeaders) {
     try {
       const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
         headers: {
-          'X-Master-Key': masterKey,
+          ...authHeaders,
           'X-Bin-Meta': 'false',
         },
       });
@@ -120,18 +141,19 @@ export const fetchResource = async (resourceName) => {
 };
 
 export const updateResource = async (resourceName, newData) => {
-  const { masterKey, binIds } = getServerConfig();
+  const { writeKey, writeKeyHeader, binIds } = getServerConfig();
   const binId = binIds[resourceName];
+  const authHeaders = getAuthHeaders(writeKey, writeKeyHeader);
 
   persistLocalData(resourceName, newData);
 
-  if (masterKey && binId) {
+  if (binId && authHeaders) {
     try {
       const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-Master-Key': masterKey,
+          ...authHeaders,
         },
         body: JSON.stringify(newData),
       });
