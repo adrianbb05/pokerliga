@@ -14,7 +14,7 @@ Para que los cambios se vean entre dispositivos/usuarios y no se pierdan al limp
    - opcional: `REACT_APP_JSONBIN_READ_KEY` y `REACT_APP_JSONBIN_WRITE_KEY`
    - opcional fallback: `REACT_APP_JSONBIN_MASTER_KEY`
 
-La app usa `localStorage` solo como caché de respaldo; la fuente principal para compartir datos entre navegadores es JSONBin.
+La app usa únicamente JSONBin para leer y escribir datos; sin bins o claves válidas no cargará información.
 
 ---
 
