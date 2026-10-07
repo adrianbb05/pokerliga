@@ -127,7 +127,7 @@ export const updateResource = async (resourceName, newData) => {
 
   if (masterKey && binId) {
     try {
-      await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+      const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -135,6 +135,10 @@ export const updateResource = async (resourceName, newData) => {
         },
         body: JSON.stringify(newData),
       });
+
+      if (!response.ok) {
+        throw new Error(`JSONBin update failed with status ${response.status}`);
+      }
     } catch (error) {
       console.warn(`Fallo al guardar ${resourceName} en JSONBin, usando almacenamiento local.`, error);
     }
