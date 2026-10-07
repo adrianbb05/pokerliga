@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import MatchForm from './components/MatchForm';
 import MatchesView from './components/MatchesView';
@@ -28,6 +28,11 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newPlayerName, setNewPlayerName] = useState('');
+  const hasHydratedRef = useRef({
+    players: false,
+    matches: false,
+    settings: false,
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -78,17 +83,46 @@ function App() {
     };
   }, []);
 
-  const persistPlayers = async (nextPlayers) => {
-    setPlayers(nextPlayers);
-    await updateResource('players', { players: nextPlayers });
-  };
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
 
-  const persistMatches = async (nextMatches) => {
-    setMatches(nextMatches);
-    await updateResource('matches', { matches: nextMatches });
-  };
+    if (!hasHydratedRef.current.players) {
+      hasHydratedRef.current.players = true;
+      return;
+    }
 
-  const handleAddPlayer = async (event) => {
+    updateResource('players', { players });
+  }, [players, loading]);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    if (!hasHydratedRef.current.matches) {
+      hasHydratedRef.current.matches = true;
+      return;
+    }
+
+    updateResource('matches', { matches });
+  }, [matches, loading]);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    if (!hasHydratedRef.current.settings) {
+      hasHydratedRef.current.settings = true;
+      return;
+    }
+
+    updateResource('settings', settings);
+  }, [settings, loading]);
+
+  const handleAddPlayer = (event) => {
     event.preventDefault();
     const trimmedName = newPlayerName.trim();
     if (!trimmedName) {
@@ -110,25 +144,25 @@ function App() {
       },
     ];
 
-    await persistPlayers(nextPlayers);
+    setPlayers(nextPlayers);
     setNewPlayerName('');
     setError('');
   };
 
-  const handleDeletePlayer = async (playerId) => {
+  const handleDeletePlayer = (playerId) => {
     const deletedPlayer = players.find((player) => player.id === playerId);
     if (!deletedPlayer) {
       return;
     }
 
     const nextPlayers = players.filter((player) => player.id !== playerId);
-    await persistPlayers(nextPlayers);
+    setPlayers(nextPlayers);
 
     const nextMatches = matches.filter((match) => match.player !== deletedPlayer.name);
-    await persistMatches(nextMatches);
+    setMatches(nextMatches);
   };
 
-  const handleAddMatch = async (newMatch) => {
+  const handleAddMatch = (newMatch) => {
     const nextMatch = {
       id: newMatch.id || `m-${Date.now()}`,
       matchNumber: matches.length + 1,
@@ -136,7 +170,7 @@ function App() {
     };
 
     const nextMatches = [nextMatch, ...matches];
-    await persistMatches(nextMatches);
+    setMatches(nextMatches);
 
     const nextSettings = {
       ...settings,
@@ -144,12 +178,11 @@ function App() {
     };
 
     setSettings(nextSettings);
-    await updateResource('settings', nextSettings);
   };
 
-  const handleDeleteMatch = async (matchId) => {
+  const handleDeleteMatch = (matchId) => {
     const nextMatches = matches.filter((match) => match.id !== matchId);
-    await persistMatches(nextMatches);
+    setMatches(nextMatches);
   };
 
   const renderContent = () => {
