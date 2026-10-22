@@ -309,7 +309,130 @@ tbody tr:hover {
   margin: 0;
 }
 
+.league-pot {
+  margin-bottom: 26px;
+  padding: clamp(18px, 3vw, 32px);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 18px;
+  background: radial-gradient(ellipse at top left, rgba(251, 191, 36, 0.1), transparent 65%), #0a1426;
+}
+
+.pot-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+
+.pot-status {
+  display: inline-block;
+  padding: 6px 10px;
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.06);
+  color: #fcd878;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.pot-summary h3 {
+  margin: 18px 0 6px;
+  color: #e5eefb;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.pot-total {
+  margin: 0;
+  color: #fef3c7;
+  font-size: clamp(2.8rem, 7vw, 4.3rem);
+  font-weight: 750;
+  letter-spacing: -0.05em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.pot-subtitle,
+.pot-rule {
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.pot-subtitle { margin: 12px 0 0; color: #d0d9e8; }
+.pot-rule { margin: 6px 0 0; color: #94a3b8; max-width: 440px; }
+.pot-chart-wrapper { display: flex; justify-content: center; }
+
+.pot-chart {
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  padding: 13px;
+  box-shadow: 0 0 36px rgba(251, 191, 36, 0.06);
+}
+
+.pot-chart-center {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #0a1426;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pot-chart-center span { font-size: 0.74rem; color: #94a3b8; }
+.pot-chart-center strong { font-size: 1.7rem; color: #f8fafc; }
+
+.prize-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.prize-card {
+  --prize-color: #fbbf24;
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-top: 2px solid var(--prize-color);
+  background: rgba(255, 255, 255, 0.025);
+  min-width: 0;
+}
+
+.prize-gold { background: linear-gradient(135deg, rgba(251, 191, 36, 0.09), transparent); }
+.prize-silver { --prize-color: #a5b4fc; }
+.prize-bronze { --prize-color: #d9956b; }
+.prize-card-header { display: flex; align-items: center; gap: 10px; }
+.prize-rank { color: var(--prize-color); font-size: 1.2rem; font-weight: 750; }
+.prize-share { color: #b9c7df; font-size: 0.75rem; line-height: 1.5; }
+.prize-card h4 { margin: 20px 0 8px; font-size: 0.95rem; overflow-wrap: anywhere; }
+.prize-amount { margin: 0; color: var(--prize-color); font-size: 2rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+.prize-net { margin: 6px 0 0; font-size: 0.8rem; color: #b9c7df; }
+.pot-note { margin: 18px 0 0; font-size: 0.76rem; color: #94a3b8; line-height: 1.7; }
+.standing-rank { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; }
+.rank-gold { color: #fbbf24; background: rgba(251, 191, 36, 0.12); font-weight: 700; }
+.rank-silver { color: #a5b4fc; background: rgba(165, 180, 252, 0.1); font-weight: 700; }
+.rank-bronze { color: #d9956b; background: rgba(217, 149, 107, 0.1); font-weight: 700; }
+.standing-gold { background: rgba(251, 191, 36, 0.03); }
+.standing-prize { color: #e2e8f0; font-weight: 600; white-space: nowrap; }
+.balance-positive { color: #86efac; white-space: nowrap; }
+.balance-negative { color: #fca5a5; white-space: nowrap; }
+.balance-even { color: #cbd5e1; white-space: nowrap; }
+.prize-pending { color: #94a3b8; font-size: 0.8rem; font-weight: 400; }
+
 @media (max-width: 640px) {
+  .pot-overview { grid-template-columns: 1fr; gap: 22px; }
+  .pot-chart { width: 160px; height: 160px; padding: 11px; }
+  .prize-grid { grid-template-columns: 1fr; gap: 12px; }
+  .prize-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; }
+  .prize-card-header { grid-column: 1; }
+  .prize-card h4 { grid-column: 1; grid-row: 2; margin: 10px 0 0; }
+  .prize-amount { grid-column: 2; grid-row: 1; align-self: center; font-size: 1.7rem; }
+  .prize-net { grid-column: 2; grid-row: 2; text-align: right; align-self: end; }
+
   .topbar {
     flex-direction: column;
     align-items: flex-start;
