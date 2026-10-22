@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import MatchForm from './components/MatchForm';
+import AuthGate from './components/AuthGate';
 import MatchesView from './components/MatchesView';
 import Navbar from './components/Navbar';
 import StandingsView from './components/StandingsView';
@@ -21,7 +22,7 @@ const tabs = [
   { id: 'stats', label: 'Estadísticas' },
 ];
 
-function App() {
+function LeagueApp() {
   const [players, setPlayers] = useState([]);
   const [matches, setMatches] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
@@ -30,12 +31,6 @@ function App() {
   const [error, setError] = useState('');
   const [loadFailed, setLoadFailed] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
-  const hasHydratedRef = useRef({
-    players: false,
-    matches: false,
-    settings: false,
-  });
-
   useEffect(() => {
     let isMounted = true;
 
@@ -110,23 +105,7 @@ function App() {
     }
   };
 
-    updateResource('matches', { matches });
-  }, [matches, loading]);
-
-  useEffect(() => {
-    if (loading) {
-      return;
-    }
-
-    if (!hasHydratedRef.current.settings) {
-      hasHydratedRef.current.settings = true;
-      return;
-    }
-
-    updateResource('settings', settings);
-  }, [settings, loading]);
-
-  const handleAddPlayer = (event) => {
+  const handleAddPlayer = async (event) => {
     event.preventDefault();
     const trimmedName = newPlayerName.trim();
     if (!trimmedName) {
@@ -153,7 +132,7 @@ function App() {
     setError('');
   };
 
-  const handleDeletePlayer = (playerId) => {
+  const handleDeletePlayer = async (playerId) => {
     const deletedPlayer = players.find((player) => player.id === playerId);
     if (!deletedPlayer) {
       return;
@@ -166,7 +145,7 @@ function App() {
     if (!await persistMatches(nextMatches)) return;
   };
 
-  const handleAddMatch = (newMatch) => {
+  const handleAddMatch = async (newMatch) => {
     const nextMatch = {
       id: newMatch.id || `m-${Date.now()}`,
       matchNumber: matches.length + 1,
@@ -189,9 +168,9 @@ function App() {
     }
   };
 
-  const handleDeleteMatch = (matchId) => {
+  const handleDeleteMatch = async (matchId) => {
     const nextMatches = matches.filter((match) => match.id !== matchId);
-    setMatches(nextMatches);
+    await persistMatches(nextMatches);
   };
 
   const renderContent = () => {
@@ -308,6 +287,10 @@ function App() {
       {renderContent()}
     </div>
   );
+}
+
+function App() {
+  return <AuthGate><LeagueApp /></AuthGate>;
 }
 
 export default App;

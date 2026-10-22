@@ -1,24 +1,3 @@
-# PokerLiga
-
-## Configuración de persistencia compartida (JSONBin)
-
-Para que los cambios se vean entre dispositivos/usuarios:
-
-1. En Vercel, abre el proyecto y ve a **Settings → Environment Variables**.
-2. Configura los 3 bins:
-   - `REACT_APP_BIN_PLAYERS`
-   - `REACT_APP_BIN_MATCHES`
-   - `REACT_APP_BIN_SETTINGS`
-3. Configura una clave válida de JSONBin:
-   - recomendado: `REACT_APP_JSONBIN_ACCESS_KEY`
-   - opcional: `REACT_APP_JSONBIN_READ_KEY` y `REACT_APP_JSONBIN_WRITE_KEY`
-   - opcional fallback: `REACT_APP_JSONBIN_MASTER_KEY`
-4. Redeploy de la aplicación para que las variables queden aplicadas en build/runtime.
-
-La app usa únicamente JSONBin para leer y escribir datos; sin bins o claves válidas no cargará información.
-
----
-
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -31,6 +10,7 @@ In Vercel → Project → Settings → Environment Variables, add:
 
 | Name | Value | Type |
 | --- | --- | --- |
+| `APP_PASSWORD` | A long password shared with your league | Secret |
 | `JSONBIN_MASTER_KEY` | Your JSONBin master key | Secret |
 | `BIN_MATCHES` | ID of the results bin | Config |
 | `BIN_PLAYERS` | ID of the players bin | Config |
@@ -38,13 +18,17 @@ In Vercel → Project → Settings → Environment Variables, add:
 
 Select Production and/or Preview as appropriate, then deploy this code and redeploy after changing variables. Use bin IDs, not URLs. Remove the old `REACT_APP_JSONBIN_MASTER_KEY` and `REACT_APP_BIN_*` variables; `VITE_*` variables are also unused. If the key appeared in a deployed browser bundle or Git history, rotate it in JSONBin.
 
+For JSONBin access keys, the server also supports private `JSONBIN_ACCESS_KEY`, or separate `JSONBIN_READ_KEY` and `JSONBIN_WRITE_KEY`, instead of the master key. Select Secret for these values and remove any old `REACT_APP_JSONBIN_*` key variables.
+
 Initialize new bins with `{ "matches": [] }`, `{ "players": [{ "id": "p-1", "name": "Ana" }] }`, and `{ "currentWeek": 1, "pointsSystem": { "1": 10, "2": 7, "3": 5, "4": 3, "5": 2, "6": 1 } }`, respectively. Existing bare arrays for matches and players are also supported. Preserve existing bins that already contain your league data.
 
-Missing configuration and JSONBin failures appear in the app. Failed loads do not substitute demo data, and failed saves do not change the displayed results or cache. The browser cache is only a copy; server requests remain authoritative.
+Missing configuration and JSONBin failures appear in the app. Failed loads do not substitute demo data, and failed saves do not change the displayed results or cache. Protected league data is not saved to browser storage; older caches are removed when the app starts or a session expires.
 
 For local development with JSONBin, put the private variables in ignored `.env.local` and run `vercel dev` (requires the Vercel CLI). Plain `npm start` does not serve Vercel functions. For a local demo with `npm start`, set `REACT_APP_USE_LOCAL_STORAGE=true` in `.env.local`; leave this variable unset on Vercel.
 
-The endpoint preserves the app's existing public access: people who can access the deployment can read and change league data. Hiding the JSONBin key does not add user authentication. Use deployment protection or add login if the league needs restricted access.
+The app requires the shared `APP_PASSWORD` before loading league data. Both reads and writes are protected on the server. Missing `APP_PASSWORD` blocks access. Sessions last 12 hours and use a signed HttpOnly, SameSite=Strict cookie with Secure enabled on Vercel. Changing the password and redeploying invalidates existing sessions. Use **Cerrar sesión** to sign out of the current browser. The password is never included in the browser build, cookies or browser storage.
+
+Local storage mode is available only outside production and starts with empty data; production always requires server authentication.
 
 Validate with `CI=true npm test -- --watchAll=false --runInBand`, `npm run test:api`, and `npm run build`.
 
