@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
 import MatchForm from './components/MatchForm';
 import MatchesView from './components/MatchesView';
@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS = {
 
 const tabs = [
   { id: 'standings', label: 'Clasificación General' },
+  { id: 'players', label: 'Jugadores' },
   { id: 'register', label: 'Registro de Partidas' },
   { id: 'weekly', label: 'Resumen Semanal' },
   { id: 'stats', label: 'Estadísticas' },
@@ -29,6 +30,11 @@ function App() {
   const [error, setError] = useState('');
   const [loadFailed, setLoadFailed] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
+  const hasHydratedRef = useRef({
+    players: false,
+    matches: false,
+    settings: false,
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -104,7 +110,23 @@ function App() {
     }
   };
 
-  const handleAddPlayer = async (event) => {
+    updateResource('matches', { matches });
+  }, [matches, loading]);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    if (!hasHydratedRef.current.settings) {
+      hasHydratedRef.current.settings = true;
+      return;
+    }
+
+    updateResource('settings', settings);
+  }, [settings, loading]);
+
+  const handleAddPlayer = (event) => {
     event.preventDefault();
     const trimmedName = newPlayerName.trim();
     if (!trimmedName) {
@@ -131,7 +153,7 @@ function App() {
     setError('');
   };
 
-  const handleDeletePlayer = async (playerId) => {
+  const handleDeletePlayer = (playerId) => {
     const deletedPlayer = players.find((player) => player.id === playerId);
     if (!deletedPlayer) {
       return;
@@ -144,7 +166,7 @@ function App() {
     if (!await persistMatches(nextMatches)) return;
   };
 
-  const handleAddMatch = async (newMatch) => {
+  const handleAddMatch = (newMatch) => {
     const nextMatch = {
       id: newMatch.id || `m-${Date.now()}`,
       matchNumber: matches.length + 1,
@@ -167,67 +189,71 @@ function App() {
     }
   };
 
-  const handleDeleteMatch = async (matchId) => {
+  const handleDeleteMatch = (matchId) => {
     const nextMatches = matches.filter((match) => match.id !== matchId);
-    await persistMatches(nextMatches);
+    setMatches(nextMatches);
   };
 
   const renderContent = () => {
+    const playersPanel = (
+      <section className="panel">
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">Plantilla</p>
+            <h2>Gestionar Jugadores</h2>
+          </div>
+        </div>
+
+        <form className="match-form" onSubmit={handleAddPlayer}>
+          <div className="field" style={{ gridColumn: 'span 2' }}>
+            <label htmlFor="new-player-name">Nombre del jugador</label>
+            <input
+              id="new-player-name"
+              type="text"
+              value={newPlayerName}
+              onChange={(event) => setNewPlayerName(event.target.value)}
+              placeholder="Ej. Ana"
+            />
+          </div>
+
+          <button type="submit" className="primary-button">
+            Añadir jugador
+          </button>
+        </form>
+
+        <div className="table-wrapper" style={{ marginTop: '20px' }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Jugador</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {players.map((player) => (
+                <tr key={player.id}>
+                  <td>{player.name}</td>
+                  <td>
+                    <button type="button" className="danger-button" onClick={() => handleDeletePlayer(player.id)}>
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    );
+
     switch (activeTab) {
       case 'standings':
         return <StandingsView players={players} matches={matches} />;
+      case 'players':
+        return playersPanel;
       case 'register':
         return (
           <>
-            <section className="panel">
-              <div className="section-header">
-                <div>
-                  <p className="eyebrow">Plantilla</p>
-                  <h2>Gestionar Jugadores</h2>
-                </div>
-              </div>
-
-              <form className="match-form" onSubmit={handleAddPlayer}>
-                <div className="field" style={{ gridColumn: 'span 2' }}>
-                  <label htmlFor="new-player-name">Nombre del jugador</label>
-                  <input
-                    id="new-player-name"
-                    type="text"
-                    value={newPlayerName}
-                    onChange={(event) => setNewPlayerName(event.target.value)}
-                    placeholder="Ej. Ana"
-                  />
-                </div>
-
-                <button type="submit" className="primary-button">
-                  Añadir jugador
-                </button>
-              </form>
-
-              <div className="table-wrapper" style={{ marginTop: '20px' }}>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Jugador</th>
-                      <th>Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {players.map((player) => (
-                      <tr key={player.id}>
-                        <td>{player.name}</td>
-                        <td>
-                          <button type="button" className="danger-button" onClick={() => handleDeletePlayer(player.id)}>
-                            Eliminar
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
             <MatchForm players={players} settings={settings} onAddMatch={handleAddMatch} />
             <MatchesView matches={matches} onDeleteMatch={handleDeleteMatch} />
           </>

@@ -1,44 +1,10 @@
-const DEFAULT_PLAYERS = [
-  { id: 'p-1', name: 'Iván' },
-  { id: 'p-2', name: 'Dani' },
-  { id: 'p-3', name: 'Paco' },
-  { id: 'p-4', name: 'Guille' },
-  { id: 'p-5', name: 'Javi' },
-  { id: 'p-6', name: 'Luis' },
-  { id: 'p-7', name: 'Marta' },
-  { id: 'p-8', name: 'Adri' },
-  { id: 'p-9', name: 'Blanca' },
-  { id: 'p-10', name: 'Nico' },
-  { id: 'p-11', name: 'Sergio' },
-  { id: 'p-12', name: 'Rafa' },
-];
-
-const DEFAULT_SETTINGS = {
-  pointsSystem: { 1: 10, 2: 7, 3: 5, 4: 3, 5: 2, 6: 1 },
-  currentWeek: 1,
+const RESOURCE_DEFAULTS = {
+  players: { players: [] },
+  matches: { matches: [] },
+  settings: {},
 };
 
-const DEFAULT_MATCHES = [
-  { id: 'm-1', matchNumber: 1, week: 1, date: '2026-10-06', table: 'A', player: 'Iván', position: 1, points: 10 },
-  { id: 'm-2', matchNumber: 2, week: 1, date: '2026-10-06', table: 'A', player: 'Dani', position: 2, points: 7 },
-  { id: 'm-3', matchNumber: 3, week: 1, date: '2026-10-06', table: 'A', player: 'Paco', position: 3, points: 5 },
-  { id: 'm-4', matchNumber: 4, week: 1, date: '2026-10-06', table: 'B', player: 'Guille', position: 1, points: 10 },
-  { id: 'm-5', matchNumber: 5, week: 1, date: '2026-10-06', table: 'B', player: 'Javi', position: 2, points: 7 },
-  { id: 'm-6', matchNumber: 6, week: 1, date: '2026-10-06', table: 'B', player: 'Luis', position: 3, points: 5 },
-];
-
-const DEFAULT_DATA = {
-  players: DEFAULT_PLAYERS,
-  matches: DEFAULT_MATCHES,
-  settings: DEFAULT_SETTINGS,
-};
-
-const STORAGE_KEYS = {
-  players: 'pokerliaga-players',
-  matches: 'pokerliaga-matches',
-  settings: 'pokerliaga-settings',
-};
-
+<<<<<<< HEAD
 const validateResource = (resourceName) => {
   if (!Object.prototype.hasOwnProperty.call(STORAGE_KEYS, resourceName)) {
     throw new Error(`Recurso desconocido: ${resourceName}`);
@@ -60,49 +26,88 @@ const requestResource = async (resourceName, options = {}) => {
     throw new Error('El servidor no devolvió JSON. Despliega la función /api/data en Vercel o usa vercel dev.');
   }
   if (!response.ok) {
+    if (response.status === 401) {
+      clearLocalCache();
+      window.dispatchEvent(new Event('pokerliga:unauthorized'));
+    }
     throw new Error(data.error || `No se pudo acceder a ${resourceName} (HTTP ${response.status}).`);
   }
   return data;
 };
 
-const isLocalMode = () => process.env.REACT_APP_USE_LOCAL_STORAGE === 'true';
+export const isLocalMode = () => process.env.NODE_ENV !== 'production' && process.env.REACT_APP_USE_LOCAL_STORAGE === 'true';
+
+export const clearLocalCache = () => {
+  try {
+    Object.values(STORAGE_KEYS).forEach((key) => window.localStorage.removeItem(key));
+  } catch {
+    // Storage may be unavailable in private browsing.
+  }
+};
 
 const getStoredData = (resourceName) => {
   const storageKey = STORAGE_KEYS[resourceName];
   if (typeof window === 'undefined' || !storageKey) {
-    return null;
-  }
+=======
+const getEnvValue = (...keys) => keys.find((key) => key !== undefined && key !== null && key !== '');
 
-  try {
-    const storedValue = window.localStorage.getItem(storageKey);
-    return storedValue ? JSON.parse(storedValue) : null;
-  } catch (error) {
-    console.warn(`No se pudo leer ${storageKey}:`, error);
-    return null;
-  }
+const getServerConfig = () => {
+  const env = typeof process !== 'undefined' && process.env ? process.env : {};
+  const readKey =
+    getEnvValue(env.REACT_APP_JSONBIN_READ_KEY, env.REACT_APP_JSONBIN_ACCESS_KEY) ?? env.REACT_APP_JSONBIN_MASTER_KEY;
+  const writeKey =
+    getEnvValue(env.REACT_APP_JSONBIN_WRITE_KEY, env.REACT_APP_JSONBIN_ACCESS_KEY) ?? env.REACT_APP_JSONBIN_MASTER_KEY;
+  const readKeyHeader =
+    getEnvValue(env.REACT_APP_JSONBIN_READ_KEY, env.REACT_APP_JSONBIN_ACCESS_KEY) ? 'X-Access-Key' : 'X-Master-Key';
+  const writeKeyHeader =
+    getEnvValue(env.REACT_APP_JSONBIN_WRITE_KEY, env.REACT_APP_JSONBIN_ACCESS_KEY) ? 'X-Access-Key' : 'X-Master-Key';
+
+  return {
+    readKey,
+    writeKey,
+    readKeyHeader,
+    writeKeyHeader,
+    binIds: {
+      matches: env.REACT_APP_BIN_MATCHES,
+      players: env.REACT_APP_BIN_PLAYERS,
+      settings: env.REACT_APP_BIN_SETTINGS,
+    },
+  };
 };
 
-const persistLocalData = (resourceName, value) => {
-  if (typeof window === 'undefined') {
-    return;
+const getAuthHeaders = (apiKey, headerName) => {
+  if (!apiKey || !headerName) {
+>>>>>>> master/master
+    return null;
   }
 
-  const storageKey = STORAGE_KEYS[resourceName];
-  if (!storageKey) {
-    return;
+  return {
+    [headerName]: apiKey,
+  };
+};
+
+const validateResourceConfig = (resourceName, binId, apiKey, keyHeader) => {
+  if (!RESOURCE_DEFAULTS[resourceName]) {
+    throw new Error(`Recurso no soportado: ${resourceName}`);
   }
 
-  window.localStorage.setItem(storageKey, JSON.stringify(value));
+  if (!binId) {
+    throw new Error(`Falta configuración de bin para ${resourceName}.`);
+  }
+
+  if (!apiKey || !keyHeader) {
+    throw new Error('Falta la clave de acceso de JSONBin.');
+  }
 };
 
 export const fetchResource = async (resourceName) => {
+<<<<<<< HEAD
   validateResource(resourceName);
   if (isLocalMode()) {
     return getStoredData(resourceName) ?? DEFAULT_DATA[resourceName];
   }
 
   const record = await requestResource(resourceName);
-  persistLocalData(resourceName, record);
   return record;
 };
 
@@ -114,8 +119,46 @@ export const updateResource = async (resourceName, newData) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newData),
     });
+=======
+  const { readKey, readKeyHeader, binIds } = getServerConfig();
+  const binId = binIds[resourceName];
+  validateResourceConfig(resourceName, binId, readKey, readKeyHeader);
+  const authHeaders = getAuthHeaders(readKey, readKeyHeader);
+  const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+    headers: {
+      ...authHeaders,
+      'X-Bin-Meta': 'false',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`JSONBin request failed with status ${response.status}`);
   }
 
-  persistLocalData(resourceName, newData);
+  const data = await response.json();
+  return data.record ?? data ?? RESOURCE_DEFAULTS[resourceName];
+};
+
+export const updateResource = async (resourceName, newData) => {
+  const { writeKey, writeKeyHeader, binIds } = getServerConfig();
+  const binId = binIds[resourceName];
+  validateResourceConfig(resourceName, binId, writeKey, writeKeyHeader);
+  const authHeaders = getAuthHeaders(writeKey, writeKeyHeader);
+
+  const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeaders,
+    },
+    body: JSON.stringify(newData),
+  });
+
+  if (!response.ok) {
+    throw new Error(`JSONBin update failed with status ${response.status}`);
+>>>>>>> master/master
+  }
+
+  if (isLocalMode()) persistLocalData(resourceName, newData);
   return newData;
 };
