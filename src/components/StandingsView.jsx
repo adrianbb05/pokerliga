@@ -26,15 +26,15 @@ function StandingsView({ players, matches }) {
     .sort((a, b) => b.points - a.points || b.wins - a.wins || b.podiums - a.podiums);
 
   const pot = players.length * ENTRY_CENTS;
-  const canDistribute = players.length >= 3;
+  const canDistribute = players.length >= 4;
   const remaining = canDistribute ? pot - ENTRY_CENTS : 0;
-  const firstPrize = Math.round(remaining * 0.8);
+  const firstPrize = Math.round(remaining * 0.65);
   const prizes = canDistribute ? [firstPrize, remaining - firstPrize, ENTRY_CENTS] : [0, 0, 0];
   const tiedAt = (index) => sameStanding(standings[index], standings[index - 1]) || sameStanding(standings[index], standings[index + 1]);
   const hasPrizeTie = standings.slice(0, 3).some((_, index) => tiedAt(index));
   const goldEnd = canDistribute ? prizes[0] / pot * 100 : 0;
   const silverEnd = canDistribute ? (prizes[0] + prizes[1]) / pot * 100 : 0;
-  const prizeLabels = ['80 % del restante', '20 % del restante', 'Recupera su entrada'];
+  const prizeLabels = ['65 % del restante', '35 % del restante', 'Recupera su entrada'];
   const prizeColors = ['gold', 'silver', 'bronze'];
 
   return (
@@ -61,7 +61,7 @@ function StandingsView({ players, matches }) {
               role="img"
               aria-label={canDistribute
                 ? `Reparto del bote: primero ${formatMoney(prizes[0])}, segundo ${formatMoney(prizes[1])}, tercero ${formatMoney(prizes[2])}.`
-                : 'Reparto pendiente: se necesitan al menos 3 jugadores.'}
+                : 'Reparto pendiente: se necesitan al menos 4 jugadores.'}
               style={{ background: canDistribute
                 ? `conic-gradient(from -90deg, #fbbf24 0% ${goldEnd}%, #a5b4fc ${goldEnd}% ${silverEnd}%, #d9956b ${silverEnd}% 100%)`
                 : 'rgba(148, 163, 184, 0.15)' }}
@@ -90,8 +90,8 @@ function StandingsView({ players, matches }) {
           })}
         </div>
         <p className="pot-note">
-          {!canDistribute ? 'Se necesitan al menos 3 jugadores para repartir el bote.'
-            : <>De los {formatMoney(pot)}, se reservan {formatMoney(ENTRY_CENTS)} para el tercero y se reparten {formatMoney(remaining)} al 80/20. El neto descuenta los 10 € de entrada.{hasPrizeTie ? ' Hay empates pendientes de resolver en los puestos con premio.' : ' Premios orientativos según la clasificación actual.'}</>}
+          {!canDistribute ? 'Se necesitan al menos 4 jugadores para que el segundo reciba más de 10 €.'
+            : <>De los {formatMoney(pot)}, se reservan {formatMoney(ENTRY_CENTS)} para el tercero y se reparten {formatMoney(remaining)} al 65/35. El neto descuenta los 10 € de entrada.{hasPrizeTie ? ' Hay empates pendientes de resolver en los puestos con premio.' : ' Premios orientativos según la clasificación actual.'}</>}
         </p>
       </div>
 
