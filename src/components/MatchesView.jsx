@@ -22,6 +22,7 @@ function MatchesView({ matches, onDeleteMatch }) {
               <th>Semana</th>
               <th>Fecha</th>
               <th>Mesa</th>
+              <th>Jugadores</th>
               <th>Jugador</th>
               <th>Posición</th>
               <th>Puntos</th>
@@ -35,6 +36,7 @@ function MatchesView({ matches, onDeleteMatch }) {
                 <td>{match.week}</td>
                 <td>{match.date}</td>
                 <td>{match.table}</td>
+                <td>{match.playerCount ?? '—'}</td>
                 <td>{match.player}</td>
                 <td>{match.position}º</td>
                 <td>{match.points}</td>

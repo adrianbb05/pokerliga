@@ -27,6 +27,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('standings');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [loadFailed, setLoadFailed] = useState(false);
   const [newPlayerName, setNewPlayerName] = useState('');
 
   useEffect(() => {
@@ -64,6 +65,7 @@ function App() {
         }
 
         setError(loadError.message || 'No se pudieron cargar los datos.');
+        setLoadFailed(true);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -79,13 +81,27 @@ function App() {
   }, []);
 
   const persistPlayers = async (nextPlayers) => {
-    setPlayers(nextPlayers);
-    await updateResource('players', { players: nextPlayers });
+    try {
+      await updateResource('players', { players: nextPlayers });
+      setPlayers(nextPlayers);
+      setError('');
+      return true;
+    } catch (saveError) {
+      setError(saveError.message);
+      return false;
+    }
   };
 
   const persistMatches = async (nextMatches) => {
-    setMatches(nextMatches);
-    await updateResource('matches', { matches: nextMatches });
+    try {
+      await updateResource('matches', { matches: nextMatches });
+      setMatches(nextMatches);
+      setError('');
+      return true;
+    } catch (saveError) {
+      setError(saveError.message);
+      return false;
+    }
   };
 
   const handleAddPlayer = async (event) => {
@@ -110,7 +126,7 @@ function App() {
       },
     ];
 
-    await persistPlayers(nextPlayers);
+    if (!await persistPlayers(nextPlayers)) return;
     setNewPlayerName('');
     setError('');
   };
@@ -122,10 +138,10 @@ function App() {
     }
 
     const nextPlayers = players.filter((player) => player.id !== playerId);
-    await persistPlayers(nextPlayers);
+    if (!await persistPlayers(nextPlayers)) return;
 
     const nextMatches = matches.filter((match) => match.player !== deletedPlayer.name);
-    await persistMatches(nextMatches);
+    if (!await persistMatches(nextMatches)) return;
   };
 
   const handleAddMatch = async (newMatch) => {
@@ -136,15 +152,19 @@ function App() {
     };
 
     const nextMatches = [nextMatch, ...matches];
-    await persistMatches(nextMatches);
+    if (!await persistMatches(nextMatches)) return;
 
     const nextSettings = {
       ...settings,
       currentWeek: Math.max(Number(settings.currentWeek || 1), Number(newMatch.week || 1)),
     };
 
-    setSettings(nextSettings);
-    await updateResource('settings', nextSettings);
+    try {
+      await updateResource('settings', nextSettings);
+      setSettings(nextSettings);
+    } catch (saveError) {
+      setError(`El resultado se guardó, pero no se pudo actualizar la semana. ${saveError.message}`);
+    }
   };
 
   const handleDeleteMatch = async (matchId) => {
@@ -229,6 +249,17 @@ function App() {
     );
   }
 
+  if (loadFailed) {
+    return (
+      <div className="app-shell">
+        <div className="status-panel error-banner" role="alert">{error}</div>
+        <button type="button" className="primary-button" onClick={() => window.location.reload()}>
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -244,7 +275,7 @@ function App() {
         </div>
       </header>
 
-      {error ? <div className="status-panel error-banner">{error}</div> : null}
+      {error ? <div className="status-panel error-banner" role="alert">{error}</div> : null}
 
       <Navbar tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 

@@ -6,6 +6,10 @@ function MatchForm({ players, settings, onAddMatch }) {
   const [week, setWeek] = useState(settings?.currentWeek || 1);
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [position, setPosition] = useState(1);
+  const [requestedPlayerCount, setRequestedPlayerCount] = useState(6);
+  const maxPlayerCount = Math.max(2, players.length);
+  const playerCount = Math.min(requestedPlayerCount, maxPlayerCount);
+  const selectedPosition = Math.min(Number(position), playerCount);
 
   useEffect(() => {
     if (players.length && !playerId) {
@@ -29,7 +33,7 @@ function MatchForm({ players, settings, onAddMatch }) {
       return;
     }
 
-    const numericPosition = Number(position);
+    const numericPosition = selectedPosition;
     const points = Number(settings?.pointsSystem?.[numericPosition] ?? 0);
 
     onAddMatch({
@@ -38,6 +42,7 @@ function MatchForm({ players, settings, onAddMatch }) {
       table,
       player: selectedPlayer.name,
       position: numericPosition,
+      playerCount,
       points,
     });
   };
@@ -90,9 +95,26 @@ function MatchForm({ players, settings, onAddMatch }) {
         </div>
 
         <div className="field">
+          <label htmlFor="match-player-count">Número de jugadores</label>
+          <select
+            id="match-player-count"
+            value={playerCount}
+            onChange={(event) => {
+              const nextCount = Number(event.target.value);
+              setRequestedPlayerCount(nextCount);
+              setPosition(Math.min(selectedPosition, nextCount));
+            }}
+          >
+            {Array.from({ length: maxPlayerCount - 1 }, (_, index) => index + 2).map((value) => (
+              <option key={value} value={value}>{value}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="field">
           <label htmlFor="match-position">Posición</label>
-          <select id="match-position" value={position} onChange={(event) => setPosition(event.target.value)}>
-            {[1, 2, 3, 4, 5, 6].map((value) => (
+          <select id="match-position" value={selectedPosition} onChange={(event) => setPosition(event.target.value)}>
+            {Array.from({ length: playerCount }, (_, index) => index + 1).map((value) => (
               <option key={value} value={value}>
                 {value}º
               </option>
@@ -102,7 +124,7 @@ function MatchForm({ players, settings, onAddMatch }) {
 
         <div className="field points-preview">
           <label>Puntuación</label>
-          <div className="score-pill">{settings?.pointsSystem?.[position] ?? 0} pts</div>
+          <div className="score-pill">{settings?.pointsSystem?.[selectedPosition] ?? 0} pts</div>
         </div>
 
         <button type="submit" className="primary-button">

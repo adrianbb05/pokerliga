@@ -16,6 +16,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:api": "node --test tests/api.test.cjs",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

@@ -39,21 +39,33 @@ const STORAGE_KEYS = {
   settings: 'pokerliaga-settings',
 };
 
-const getEnvValue = (...keys) => keys.find((key) => key !== undefined && key !== null && key !== '');
-
-const getServerConfig = () => {
-  const env = typeof process !== 'undefined' && process.env ? process.env : {};
-  const viteEnv = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : {};
-
-  return {
-    masterKey: getEnvValue(env.REACT_APP_JSONBIN_MASTER_KEY, viteEnv.VITE_JSONBIN_MASTER_KEY),
-    binIds: {
-      matches: getEnvValue(env.REACT_APP_BIN_MATCHES, viteEnv.VITE_BIN_MATCHES),
-      players: getEnvValue(env.REACT_APP_BIN_PLAYERS, viteEnv.VITE_BIN_PLAYERS),
-      settings: getEnvValue(env.REACT_APP_BIN_SETTINGS, viteEnv.VITE_BIN_SETTINGS),
-    },
-  };
+const validateResource = (resourceName) => {
+  if (!Object.prototype.hasOwnProperty.call(STORAGE_KEYS, resourceName)) {
+    throw new Error(`Recurso desconocido: ${resourceName}`);
+  }
 };
+
+const requestResource = async (resourceName, options = {}) => {
+  let response;
+  try {
+    response = await fetch(`/api/data?resource=${resourceName}`, options);
+  } catch {
+    throw new Error('No se pudo conectar con el servidor. Revisa la conexión y vuelve a intentarlo.');
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error('El servidor no devolvió JSON. Despliega la función /api/data en Vercel o usa vercel dev.');
+  }
+  if (!response.ok) {
+    throw new Error(data.error || `No se pudo acceder a ${resourceName} (HTTP ${response.status}).`);
+  }
+  return data;
+};
+
+const isLocalMode = () => process.env.REACT_APP_USE_LOCAL_STORAGE === 'true';
 
 const getStoredData = (resourceName) => {
   const storageKey = STORAGE_KEYS[resourceName];
@@ -84,61 +96,26 @@ const persistLocalData = (resourceName, value) => {
 };
 
 export const fetchResource = async (resourceName) => {
-  const { masterKey, binIds } = getServerConfig();
-  const binId = binIds[resourceName];
-
-  if (masterKey && binId) {
-    try {
-      const response = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-        headers: {
-          'X-Master-Key': masterKey,
-          'X-Bin-Meta': 'false',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`JSONBin request failed with status ${response.status}`);
-      }
-
-      const data = await response.json();
-      const record = data.record ?? data;
-      if (record) {
-        persistLocalData(resourceName, record);
-        return record;
-      }
-    } catch (error) {
-      console.warn(`Fallo al cargar ${resourceName} desde JSONBin, usando caché local.`, error);
-    }
+  validateResource(resourceName);
+  if (isLocalMode()) {
+    return getStoredData(resourceName) ?? DEFAULT_DATA[resourceName];
   }
 
-  const storedValue = getStoredData(resourceName);
-  if (storedValue) {
-    return storedValue;
-  }
-
-  return DEFAULT_DATA[resourceName] ?? [];
+  const record = await requestResource(resourceName);
+  persistLocalData(resourceName, record);
+  return record;
 };
 
 export const updateResource = async (resourceName, newData) => {
-  const { masterKey, binIds } = getServerConfig();
-  const binId = binIds[resourceName];
-
-  persistLocalData(resourceName, newData);
-
-  if (masterKey && binId) {
-    try {
-      await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': masterKey,
-        },
-        body: JSON.stringify(newData),
-      });
-    } catch (error) {
-      console.warn(`Fallo al guardar ${resourceName} en JSONBin, usando almacenamiento local.`, error);
-    }
+  validateResource(resourceName);
+  if (!isLocalMode()) {
+    await requestResource(resourceName, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newData),
+    });
   }
 
+  persistLocalData(resourceName, newData);
   return newData;
 };
