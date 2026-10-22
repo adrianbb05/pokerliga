@@ -183,8 +183,8 @@ function LeagueApp() {
           </div>
         </div>
 
-        <form className="match-form" onSubmit={handleAddPlayer}>
-          <div className="field" style={{ gridColumn: 'span 2' }}>
+        <form className="match-form player-form" onSubmit={handleAddPlayer}>
+          <div className="field">
             <label htmlFor="new-player-name">Nombre del jugador</label>
             <input
               id="new-player-name"
@@ -201,7 +201,7 @@ function LeagueApp() {
         </form>
 
         <div className="table-wrapper" style={{ marginTop: '20px' }}>
-          <table>
+          <table className="responsive-table players-table">
             <thead>
               <tr>
                 <th>Jugador</th>
@@ -211,8 +211,8 @@ function LeagueApp() {
             <tbody>
               {players.map((player) => (
                 <tr key={player.id}>
-                  <td>{player.name}</td>
-                  <td>
+                  <td data-label="Jugador">{player.name}</td>
+                  <td data-label="Acción">
                     <button type="button" className="danger-button" onClick={() => handleDeletePlayer(player.id)}>
                       Eliminar
                     </button>

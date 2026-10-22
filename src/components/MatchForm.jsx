@@ -56,8 +56,8 @@ function MatchForm({ players, settings, onAddMatch }) {
         </div>
       </div>
 
-      <form className="match-form" onSubmit={handleSubmit}>
-        <div className="field">
+      <form className="match-form match-results-form" onSubmit={handleSubmit}>
+        <div className="field match-player-field">
           <label htmlFor="match-player">Jugador</label>
           <select id="match-player" value={playerId} onChange={(event) => setPlayerId(event.target.value)}>
             {players.map((player) => (
@@ -95,9 +95,10 @@ function MatchForm({ players, settings, onAddMatch }) {
         </div>
 
         <div className="field">
-          <label htmlFor="match-player-count">Número de jugadores</label>
+          <label htmlFor="match-player-count">N.º jugadores</label>
           <select
             id="match-player-count"
+            aria-label="Número de jugadores"
             value={playerCount}
             onChange={(event) => {
               const nextCount = Number(event.target.value);

@@ -96,7 +96,7 @@ function StandingsView({ players, matches }) {
       </div>
 
       <div className="table-wrapper">
-        <table>
+        <table className="responsive-table standings-table">
           <thead>
             <tr>
               <th>#</th>
@@ -118,15 +118,15 @@ function StandingsView({ players, matches }) {
               const balance = prize - ENTRY_CENTS;
               return (
               <tr key={player.id} className={index < 3 && !prizePending ? `standing-${prizeColors[index]}` : undefined}>
-                <td><span className={`standing-rank ${index < 3 && !prizePending ? `rank-${prizeColors[index]}` : ''}`}>{index + 1}</span></td>
-                <td>{player.name}</td>
-                <td>{player.points}</td>
-                <td>{player.matches}</td>
-                <td>{player.wins}</td>
-                <td>{player.podiums}</td>
-                <td>{player.average.toFixed(1)}</td>
-                <td className="standing-prize">{prizePending ? <span className="prize-pending">Pendiente</span> : formatMoney(prize)}</td>
-                <td className={prizePending ? 'prize-pending' : balance > 0 ? 'balance-positive' : balance < 0 ? 'balance-negative' : 'balance-even'}>
+                <td data-label="Puesto"><span className={`standing-rank ${index < 3 && !prizePending ? `rank-${prizeColors[index]}` : ''}`}>{index + 1}</span></td>
+                <td data-label="Jugador" className="standing-player">{player.name}</td>
+                <td data-label="Puntos">{player.points}</td>
+                <td data-label="Partidas">{player.matches}</td>
+                <td data-label="Victorias">{player.wins}</td>
+                <td data-label="Podios">{player.podiums}</td>
+                <td data-label="Media">{player.average.toFixed(1)}</td>
+                <td data-label="Premio previsto" className="standing-prize">{prizePending ? <span className="prize-pending">Pendiente</span> : formatMoney(prize)}</td>
+                <td data-label="Balance neto" className={prizePending ? 'prize-pending' : balance > 0 ? 'balance-positive' : balance < 0 ? 'balance-negative' : 'balance-even'}>
                   {prizePending ? '—' : formatBalance(balance)}
                 </td>
               </tr>

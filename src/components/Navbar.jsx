@@ -6,6 +6,7 @@ function Navbar({ tabs, activeTab, onTabChange }) {
           key={tab.id}
           type="button"
           className={`tab-button ${activeTab === tab.id ? 'active' : ''}`}
+          aria-pressed={activeTab === tab.id}
           onClick={() => onTabChange(tab.id)}
         >
           {tab.label}

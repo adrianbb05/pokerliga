@@ -15,7 +15,7 @@ function MatchesView({ matches, onDeleteMatch }) {
       </div>
 
       <div className="table-wrapper">
-        <table>
+        <table className="responsive-table results-table">
           <thead>
             <tr>
               <th>#</th>
@@ -32,15 +32,15 @@ function MatchesView({ matches, onDeleteMatch }) {
           <tbody>
             {orderedMatches.map((match) => (
               <tr key={match.id}>
-                <td>{match.matchNumber || match.id}</td>
-                <td>{match.week}</td>
-                <td>{match.date}</td>
-                <td>{match.table}</td>
-                <td>{match.playerCount ?? '—'}</td>
-                <td>{match.player}</td>
-                <td>{match.position}º</td>
-                <td>{match.points}</td>
-                <td>
+                <td data-label="#">{match.matchNumber || match.id}</td>
+                <td data-label="Semana">{match.week}</td>
+                <td data-label="Fecha">{match.date}</td>
+                <td data-label="Mesa">{match.table}</td>
+                <td data-label="Jugadores">{match.playerCount ?? '—'}</td>
+                <td data-label="Jugador" className="result-player">{match.player}</td>
+                <td data-label="Posición">{match.position}º</td>
+                <td data-label="Puntos">{match.points}</td>
+                <td data-label="Acción" className="result-action">
                   <button type="button" className="danger-button" onClick={() => onDeleteMatch(match.id)}>
                     Borrar
                   </button>
